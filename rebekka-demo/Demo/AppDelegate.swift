@@ -18,8 +18,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
     
-    func application(application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
+    func application(_ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
             // Override point for customization after application launch.
             
             var configuration = SessionConfiguration()
@@ -41,8 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func testUpload() {
-        if let URL = NSBundle.mainBundle().URLForResource("TestUpload", withExtension: "png") {
-            let path = "/upload/\(NSUUID().UUIDString).png"
+        if let URL = Bundle.main.url(forResource: "TestUpload", withExtension: "png") {
+            let path = "/upload/\(UUID().uuidString).png"
             self.session.upload(URL, path: path) {
                 (result, error) -> Void in
                 print("Upload file with result:\n\(result), error: \(error)\n\n")
@@ -56,7 +56,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             print("Download file with result:\n\(fileURL), error: \(error)\n\n")
             if let fileURL = fileURL {
                 do {
-                    try NSFileManager.defaultManager().removeItemAtURL(fileURL)
+                    try FileManager.default.removeItem(at: fileURL)
                 } catch let error as NSError {
                     print("Error: \(error)")
                 }
@@ -66,7 +66,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func testCreate() {
-        let name = NSUUID().UUIDString
+        let name = UUID().uuidString
         self.session.createDirectory("/upload/\(name)") {
             (result, error) -> Void in
             print("Create directory with result:\n\(result), error: \(error)")

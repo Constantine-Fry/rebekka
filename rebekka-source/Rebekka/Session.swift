@@ -9,41 +9,41 @@
 import Foundation
 
 public typealias ResourceResultCompletionHandler = ([ResourceItem]?, NSError?) -> Void
-public typealias FileURLResultCompletionHandler = (NSURL?, NSError?) -> Void
+public typealias FileURLResultCompletionHandler = (URL?, NSError?) -> Void
 public typealias BooleanResultCompletionHandler = (Bool, NSError?) -> Void
 
 
 /** The FTP session. */
-public class Session {
+open class Session {
     /** The serial private operation queue. */
-    private let operationQueue: NSOperationQueue
+    fileprivate let operationQueue: OperationQueue
     
     /** The queue for completion handlers. */
-    private let completionHandlerQueue: NSOperationQueue
+    fileprivate let completionHandlerQueue: OperationQueue
     
     /** The serial queue for streams in operations. */
-    private let streamQueue: dispatch_queue_t
+    fileprivate let streamQueue: DispatchQueue
     
     /** The configuration of the session. */
-    private let configuration: SessionConfiguration
+    fileprivate let configuration: SessionConfiguration
     
     public init(configuration: SessionConfiguration,
-        completionHandlerQueue: NSOperationQueue = NSOperationQueue.mainQueue()) {
-            self.operationQueue = NSOperationQueue()
+        completionHandlerQueue: OperationQueue = OperationQueue.main) {
+            self.operationQueue = OperationQueue()
             self.operationQueue.maxConcurrentOperationCount = 1
             self.operationQueue.name = "net.ftp.rebekka.operations.queue"
-            self.streamQueue = dispatch_queue_create("net.ftp.rebekka.cfstream.queue", nil)
+            self.streamQueue = DispatchQueue(label: "net.ftp.rebekka.cfstream.queue", attributes: [])
             self.completionHandlerQueue = completionHandlerQueue
             self.configuration = configuration
     }
     
     /** Returns content of directory at path. */
-    public func list(path: String, completionHandler: ResourceResultCompletionHandler) {
+    open func list(_ path: String, completionHandler: @escaping ResourceResultCompletionHandler) {
         let operation = ResourceListOperation(configuration: configuration, queue: self.streamQueue)
         operation.completionBlock = {
             [weak operation] in
             if let strongOperation = operation {
-                self.completionHandlerQueue.addOperationWithBlock {
+                self.completionHandlerQueue.addOperation {
                     completionHandler(strongOperation.resources, strongOperation.error)
                 }
             }
@@ -56,12 +56,12 @@ public class Session {
     }
     
     /** Creates new directory at path. */
-    public func createDirectory(path: String, completionHandler: BooleanResultCompletionHandler) {
+    open func createDirectory(_ path: String, completionHandler: @escaping BooleanResultCompletionHandler) {
         let operation = DirectoryCreationOperation(configuration: configuration, queue: self.streamQueue)
         operation.completionBlock = {
             [weak operation] in
             if let strongOperation = operation {
-                self.completionHandlerQueue.addOperationWithBlock {
+                self.completionHandlerQueue.addOperation {
                     completionHandler(strongOperation.error == nil, strongOperation.error)
                 }
             }
@@ -76,12 +76,12 @@ public class Session {
     /** 
     Downloads file at path from FTP server.
     File is stored in /tmp directory. Caller is responsible for deleting this file. */
-    public func download(path: String, completionHandler: FileURLResultCompletionHandler) {
+    open func download(_ path: String, completionHandler: @escaping FileURLResultCompletionHandler) {
         let operation = FileDownloadOperation(configuration: configuration, queue: self.streamQueue)
         operation.completionBlock = {
             [weak operation] in
             if let strongOperation = operation {
-                self.completionHandlerQueue.addOperationWithBlock {
+                self.completionHandlerQueue.addOperation {
                     completionHandler(strongOperation.fileURL, strongOperation.error)
                 }
             }
@@ -91,12 +91,12 @@ public class Session {
     }
     
     /** Uploads file from fileURL at path. */
-    public func upload(fileURL: NSURL, path: String, completionHandler: BooleanResultCompletionHandler) {
+    open func upload(_ fileURL: URL, path: String, completionHandler: @escaping BooleanResultCompletionHandler) {
         let operation = FileUploadOperation(configuration: configuration, queue: self.streamQueue)
         operation.completionBlock = {
             [weak operation] in
             if let strongOperation = operation {
-                self.completionHandlerQueue.addOperationWithBlock {
+                self.completionHandlerQueue.addOperation {
                     completionHandler(strongOperation.error == nil, strongOperation.error)
                 }
             }
@@ -126,7 +126,7 @@ public struct SessionConfiguration {
     public var passive = true
     
     /** The encoding of resource names. */
-    public var encoding = NSUTF8StringEncoding
+    public var encoding = String.Encoding.utf8
     
     /** The username for authorization. Defaults to `anonymous` */
     public var username = kFTPAnonymousUser
@@ -136,12 +136,12 @@ public struct SessionConfiguration {
     
     public init() { }
     
-    internal func URL() -> NSURL {
+    internal func URL() -> Foundation.URL {
         var stringURL = host
         if !stringURL.hasPrefix("ftp://") {
             stringURL = "ftp://\(host)/"
         }
-        let url = NSURL(string: stringURL)
+        let url = Foundation.URL(string: stringURL)
         return url!
     }
 }
@@ -150,24 +150,24 @@ public struct SessionConfiguration {
 private class SessionConfigurationStorage {
     
     /** The URL to plist file. */
-    private let storageURL: NSURL!
+    fileprivate let storageURL: URL!
     
     init() {
-        storageURL = NSURL(fileURLWithPath: "")
+        storageURL = URL(fileURLWithPath: "")
     }
     
     /** Returns an array of all stored servers. */
-    private func allServers() {
+    fileprivate func allServers() {
         
     }
     
     /** Stores server. */
-    private func storeServer() {
+    fileprivate func storeServer() {
         
     }
     
     /** Deletes server. */
-    private func deleteServer() {
+    fileprivate func deleteServer() {
         
     }
     
